@@ -19,37 +19,31 @@ import java.util.function.Function;
 public class JwtService {
     @Value("${application.security.jwt.SECRET_KEY}")
     private String SECRET_KEY;
+    @Value("${application.security.jwt.SECRET_REFRESH_KEY}")
+    private String SECRET_REFRESH_KEY;
 
-    private long refreshExpiration = 1000 * 60 * 240;
-    /*private static final String SECRET_KEY = "";
-    @Value("${application.security.jwt.expiration}")
-    private long jwtExpiration*/
+    private final long jwtExpiration = 1000 * 60 * 30;   //30m
+    private final long refreshExpiration = 3L * 30 * 24 * 60 * 60 * 1000;   //3 months
+
 
     public String extractUsername(String token){
         return extractClaim(token, Claims::getSubject);
     }
-
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver){
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
-
     public String generateToken(UserDetails userDetails){
         return generateToken(new HashMap<>(), userDetails);
     }
 
-
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails){
-        return Jwts
-                .builder()
-                .setClaims(extraClaims)
-                .setSubject(userDetails.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24)) //TODO заменить переменной jwtExpiration
-                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
-                .compact();
+    public String generateToken(
+            Map<String, Object> extraClaims,
+            UserDetails userDetails
+    ) {
+        return buildToken(extraClaims, userDetails, jwtExpiration);
     }
 
     public String generateRefreshToken(
@@ -57,6 +51,7 @@ public class JwtService {
     ) {
         return buildToken(new HashMap<>(), userDetails, refreshExpiration);
     }
+
     private String buildToken(
             Map<String, Object> extraClaims,
             UserDetails userDetails,
@@ -77,16 +72,13 @@ public class JwtService {
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
 
-
     private boolean isTokenExpired(String token){
         return extractExpiration(token).before(new Date());
     }
 
-
     private Date extractExpiration(String token){
         return extractClaim(token, Claims::getExpiration);
     }
-
 
     private Claims extractAllClaims(String token){
         return Jwts
@@ -96,7 +88,6 @@ public class JwtService {
                 .parseClaimsJws(token)
                 .getBody();
     }
-
 
     private Key getSignInKey(){
         byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
