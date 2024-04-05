@@ -1,18 +1,15 @@
 package com.bstu.UniversityIIT.controller;
 
+import com.bstu.UniversityIIT.entity.User;
 import com.bstu.UniversityIIT.entity.UserDTO;
 import com.bstu.UniversityIIT.service.FileService;
 import com.bstu.UniversityIIT.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 
 @RestController
@@ -31,16 +28,31 @@ public class AdminController {
         return userService.getAllUsers();
     }
 
-    @PostMapping("/photo")
+    @PutMapping("/updateUser/{id}")
+    public ResponseEntity<?> updateUser(
+            @PathVariable Integer id,
+            @RequestBody User user
+    ){
+
+        return userService.updateUser(id, user);
+    }
+
+    @DeleteMapping("/deleteUser/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Integer id){
+        return userService.deleteById(id);
+    }
+
+
+    /*@PostMapping("/photo")
     @PreAuthorize("hasAuthority('admin:create')")
     public ResponseEntity<String> uploadPhoto(@RequestParam("file")MultipartFile file){
         return ResponseEntity.ok().body(userService.uploadPhoto(file));
-    }
+    }*/
 
-    @GetMapping(path = "/contacts/image/{filename}", produces = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE})
+    /*@GetMapping(path = "/contacts/image/{filename}", produces = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE})
     public byte[] getPhoto(@PathVariable("filename") String filename) throws IOException{
         return Files.readAllBytes(Paths.get(PHOTO_DIRECTORY + filename));
-    }
+    }*/
 
 
     @PostMapping("/schedule")

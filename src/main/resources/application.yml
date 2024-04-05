@@ -1,5 +1,8 @@
 spring:
   datasource:
+#    url: jdbc:postgresql://localhost/iit
+#    username: user
+#    password: pass
     url: jdbc:postgresql://localhost/iit
     username: postgres
     password:

@@ -1,24 +1,36 @@
 package com.bstu.UniversityIIT.controller;
 
+import com.bstu.UniversityIIT.entity.User;
+import com.bstu.UniversityIIT.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+@Tag(
+        name = "Публичный контроллер",
+        description = "Доступ к этому репозиторию могут получить любые пользователи (в т ч и без авторизации)"
+)
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")
 public class PublicController {
+    public final UserService userService;
 
     //TODO resolve xlsx issue
     @GetMapping(path = "/schedule/{typeSchedule}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -96,5 +108,38 @@ public class PublicController {
         var fileContent = Files.readAllBytes(filePath);
 
         return new ResponseEntity<>(fileContent, HttpStatus.OK);
+    }
+
+
+    @Operation(
+            summary = "Установка аватара",
+            description = "Устанавливает аватар для пользователя с данным username")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Успешная операция"),
+            @ApiResponse(responseCode = "403", description = "Вы не можете изменить фото профиля другого пользователя")
+    })
+    @PostMapping("/users/{username}/setAvatar")
+    public ResponseEntity<String> savePhoto(
+            @RequestParam MultipartFile file,
+            @PathVariable String username,
+            @AuthenticationPrincipal UserDetails user
+    ){
+        if(user.getUsername() == null){
+            return new ResponseEntity<>("You cannot change another user's profile picture", HttpStatus.FORBIDDEN);
+        }
+        if(user.getUsername().equals(username)){
+            User userDb = userService.findByUsername(username);
+            var response = userService.saveUserPhoto(userDb, file);
+            return ResponseEntity.created(URI.create(response)).body(response);
+        }else{
+            return new ResponseEntity<>("You cannot change another user's profile picture", HttpStatus.FORBIDDEN);
+        }
+    }
+
+    @GetMapping(path = "/users/{username}/getAvatar", produces = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE})
+    public ResponseEntity<byte[]> getUserAvatar(
+            @PathVariable String username
+    ) throws IOException {
+        return userService.getUserAvatar(username);
     }
 }

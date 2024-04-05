@@ -21,6 +21,10 @@ public class Post {
 
     private String title;
     private String text;
+
+/*    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User author;*/
     private LocalDateTime creationDate;
 
 }
