@@ -1,12 +1,12 @@
 package com.bstu.UniversityIIT.service;
 
 import com.bstu.UniversityIIT.entity.ProfilePhoto;
-import com.bstu.UniversityIIT.entity.Token;
 import com.bstu.UniversityIIT.entity.User;
-import com.bstu.UniversityIIT.entity.UserDTO;
+import com.bstu.UniversityIIT.entity.DTO.UserDTO;
 import com.bstu.UniversityIIT.repository.ProfilePhotoRepository;
 import com.bstu.UniversityIIT.repository.TokenRepository;
 import com.bstu.UniversityIIT.repository.UserRepository;
+import com.bstu.UniversityIIT.service.mapper.UserDTOMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,7 +21,6 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -35,25 +34,27 @@ public class UserService {
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
     private final ProfilePhotoRepository profilePhotoRepository;
+    private final UserDTOMapper userDTOMapper;
     private String photoDirectory = System.getProperty("user.home") + "/Downloads/IIT_test_files/users";
 
     public List<UserDTO> getAllUsers(){
         return userRepository.findAll()
                 .stream()
-                .map(user -> new UserDTO(
-                        user.getId(),
-                        user.getUsername(),
-                        user.getRole()
-                )).collect(Collectors.toList());
+                .map(userDTOMapper)
+                .collect(Collectors.toList());
     }
 
     public UserDTO getUser(Integer id){
         return userRepository.findById(id)
-                .map(user -> new UserDTO(
-                        user.getId(),
-                        user.getUsername(),
-                        user.getRole()
-                )).orElseThrow();
+                .map(userDTOMapper)
+                .orElseThrow();
+    }
+
+    public List<UserDTO> getAllTeachers(){
+        return userRepository.findAllTeachers()
+                .stream()
+                .map(userDTOMapper)
+                .collect(Collectors.toList());
     }
 
     public User findByUsername(String username){

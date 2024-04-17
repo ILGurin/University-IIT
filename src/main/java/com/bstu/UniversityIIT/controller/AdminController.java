@@ -1,7 +1,7 @@
 package com.bstu.UniversityIIT.controller;
 
 import com.bstu.UniversityIIT.entity.User;
-import com.bstu.UniversityIIT.entity.UserDTO;
+import com.bstu.UniversityIIT.entity.DTO.UserDTO;
 import com.bstu.UniversityIIT.service.FileService;
 import com.bstu.UniversityIIT.service.UserService;
 import lombok.RequiredArgsConstructor;

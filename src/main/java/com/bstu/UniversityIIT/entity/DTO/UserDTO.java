@@ -1,5 +1,6 @@
-package com.bstu.UniversityIIT.entity;
+package com.bstu.UniversityIIT.entity.DTO;
 
+import com.bstu.UniversityIIT.entity.Role;
 import lombok.Builder;
 
 @Builder

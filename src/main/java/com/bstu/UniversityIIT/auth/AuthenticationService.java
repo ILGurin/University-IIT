@@ -2,13 +2,14 @@ package com.bstu.UniversityIIT.auth;
 
 import com.bstu.UniversityIIT.config.JwtService;
 import com.bstu.UniversityIIT.entity.*;
+import com.bstu.UniversityIIT.entity.DTO.UserDTO;
 import com.bstu.UniversityIIT.repository.TokenRepository;
 import com.bstu.UniversityIIT.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.http.HttpHeaders;
 
 import java.io.IOException;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -35,12 +37,6 @@ public class AuthenticationService {
                 .tokens(null) //Can be removed
                 .build();
 
-        var userDTO = UserDTO.builder()
-                .id(user.getId())
-                .username(request.getUsername())
-                .role(Role.USER)
-                .build();
-
         var userFromDb = repository.findByUsername(user.getUsername()); //Throw an exception
         if(userFromDb.isPresent()){
             return null;
@@ -49,6 +45,12 @@ public class AuthenticationService {
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
         saveUserToken(savedUser, jwtToken);
+
+        var userDTO = UserDTO.builder()
+                .id(savedUser.getId())
+                .username(savedUser.getUsername())
+                .role(savedUser.getRole())
+                .build();
         return AuthenticationResponse.builder()
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
@@ -103,44 +105,6 @@ public class AuthenticationService {
         tokenRepository.saveAll(validUserTokens);
     }
 
-    public void refreshToken(
-            HttpServletRequest request,
-            HttpServletResponse response
-    ) throws IOException {
-        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        final String refreshToken;
-        final String username;
-        if (authHeader == null ||!authHeader.startsWith("Bearer ")) {
-            return;
-        }
-
-        //TODO implement storing refresh tokens in the DB & deleting them since this is a potential vulnerability
-        refreshToken = authHeader.substring(7);
-        System.out.println("refresh_token: ");
-        System.out.println(refreshToken);
-        username = jwtService.extractUsername(refreshToken);
-        if (username != null) {
-            var user = this.repository.findByUsername(username)
-                    .orElseThrow();
-            var userDTO = UserDTO.builder()
-                    .id(user.getId())
-                    .username(user.getUsername())
-                    .role(user.getRole())
-                    .build();
-            if (jwtService.isTokenValid(refreshToken, user)) {
-                var accessToken = jwtService.generateToken(user);
-                revokeAllUserTokens(user);
-                saveUserToken(user, accessToken);
-                var authResponse = AuthenticationResponse.builder()
-                        .accessToken(accessToken)
-                        .refreshToken(refreshToken)
-                        .userDTO(userDTO)
-                        .build();
-                new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
-            }
-        }
-    }
-
     public void getCurrentUser(
             HttpServletRequest request,
             HttpServletResponse response
@@ -176,5 +140,32 @@ public class AuthenticationService {
                 new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
             }
         }
+    }
+
+    public ResponseEntity<?> refreshToken(String refreshToken) {
+        String username = jwtService.extractUsername(refreshToken);
+        User user = repository.findByUsername(username).orElseThrow();
+        var tokens = tokenRepository.findAllValidTokensByUser(user.getId());
+        for (Token token : tokens){
+            if(Objects.equals(token.getToken(), refreshToken)){
+                return new ResponseEntity<>("Нужно прислать refreshToken а не accessToken", HttpStatus.BAD_REQUEST);
+            }
+        }
+        UserDTO userDTO = UserDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .role(user.getRole())
+                .build();
+        var newAccessToken = jwtService.generateToken(user);
+        var newRefreshToken = jwtService.generateRefreshToken(user);
+        AuthenticationResponse authResponse = AuthenticationResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .userDTO(userDTO)
+                .build();
+
+        revokeAllUserTokens(user);
+        saveUserToken(user, newAccessToken);
+        return new ResponseEntity<>(authResponse, HttpStatus.OK);
     }
 }

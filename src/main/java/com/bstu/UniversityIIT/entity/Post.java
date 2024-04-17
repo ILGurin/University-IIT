@@ -1,5 +1,6 @@
 package com.bstu.UniversityIIT.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,12 +9,12 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@Entity
 @Table(name = "posts")
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
 public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -22,10 +23,9 @@ public class Post {
     private String title;
     private String text;
 
-/*    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private User author;*/
+    private User user;
     private LocalDateTime creationDate;
-
 }
 

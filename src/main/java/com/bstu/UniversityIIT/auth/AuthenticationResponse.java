@@ -1,6 +1,6 @@
 package com.bstu.UniversityIIT.auth;
 
-import com.bstu.UniversityIIT.entity.UserDTO;
+import com.bstu.UniversityIIT.entity.DTO.UserDTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

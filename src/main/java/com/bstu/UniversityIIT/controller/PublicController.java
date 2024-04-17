@@ -1,6 +1,7 @@
 package com.bstu.UniversityIIT.controller;
 
 import com.bstu.UniversityIIT.entity.User;
+import com.bstu.UniversityIIT.entity.DTO.UserDTO;
 import com.bstu.UniversityIIT.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -21,6 +22,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 @Tag(
         name = "Публичный контроллер",
@@ -141,5 +143,11 @@ public class PublicController {
             @PathVariable String username
     ) throws IOException {
         return userService.getUserAvatar(username);
+    }
+
+
+    @GetMapping("/users/getAllTeachers")
+    public List<UserDTO> getAllTeachers(){
+        return userService.getAllTeachers();
     }
 }

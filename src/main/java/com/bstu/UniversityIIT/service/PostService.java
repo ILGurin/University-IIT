@@ -1,9 +1,16 @@
 package com.bstu.UniversityIIT.service;
 
 import com.bstu.UniversityIIT.entity.Post;
+import com.bstu.UniversityIIT.entity.DTO.PostDTO;
+import com.bstu.UniversityIIT.entity.User;
 import com.bstu.UniversityIIT.repository.PostRepository;
+import com.bstu.UniversityIIT.repository.UserRepository;
+import com.bstu.UniversityIIT.service.mapper.PostDTOMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.BeanUtils;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -13,29 +20,63 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PostService {
     private final PostRepository postRepository;
+    private final UserRepository userRepository;
+    private final PostDTOMapper postDTOMapper;
 
 
-    public List<Post> getAllPosts(){
-        return postRepository.findAll();
+    public List<PostDTO> getAllPosts(){
+        return postRepository.findAll()
+                .stream()
+                .map(postDTOMapper)
+                .toList();
     }
 
-    public Post getPostById(){
-        return null;
+    public ResponseEntity<?> getPostById(Integer id){
+        PostDTO postDTO = postRepository.findById(id)
+                .map(postDTOMapper)
+                .orElseThrow();
+        return new ResponseEntity<>(postDTO, HttpStatus.OK);
     }
 
-    public Post createPost(Post post){
-        post.setCreationDate(LocalDateTime.now());
-        return postRepository.save(post);
+    public PostDTO createPost(Post post){
+        User user = null;
+        try{
+            UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
+            post.setUser(user);
+            post.setCreationDate(LocalDateTime.now());
+        }catch (Exception e){
+            System.out.println("PostService: createPost() - user not found");
+            return null;
+        }
+        postRepository.save(post);
+
+        return postDTOMapper.apply(post);
     }
 
-    public void deletePostById(Integer id){
+    public ResponseEntity<?> deletePostById(Integer id){
         if (postRepository.findById(id).isPresent()){
             postRepository.deleteById(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
+        return new ResponseEntity<>("Пост не найден", HttpStatus.NOT_FOUND);
     }
 
-    public Post updatePost(Post post, Post postFromDb){
-        BeanUtils.copyProperties(post, postFromDb, "id");
-        return postRepository.save(postFromDb);
+    public ResponseEntity<?> updatePost(Post post, Integer id){
+        Post postFromDb = null;
+        try{
+            postFromDb = postRepository.findById(id).orElseThrow();
+        }catch (Exception e){
+            return new ResponseEntity<>("Пост не найден", HttpStatus.NOT_FOUND);
+        }
+        postFromDb.setTitle(post.getTitle());
+        postFromDb.setText(post.getText());
+        postRepository.save(postFromDb);
+
+        ResponseEntity<?> response = getPostById(id);
+        if(response.getStatusCode() == HttpStatus.OK){
+            return response;
+        }
+        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

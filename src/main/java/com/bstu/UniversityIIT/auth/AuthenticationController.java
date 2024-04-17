@@ -1,6 +1,5 @@
 package com.bstu.UniversityIIT.auth;
 
-import com.bstu.UniversityIIT.entity.UserDTO;
 import com.bstu.UniversityIIT.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -11,7 +10,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -21,7 +19,8 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final UserService userService;
 
-    @PostMapping("/register")   //TODO admin controller
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/register")
     public ResponseEntity<AuthenticationResponse> register(
             @RequestBody RegisterRequest request
     ){
@@ -52,11 +51,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/refresh-token")
-    public void refreshToken(
-            HttpServletRequest request,
-            HttpServletResponse response
-    ) throws IOException {
-        authenticationService.refreshToken(request, response);
+    public ResponseEntity<?> refreshToken(@RequestBody RefreshRequest refreshRequest){
+        return authenticationService.refreshToken(refreshRequest.getRefreshToken());
     }
 
     @PostMapping("/check-auth")

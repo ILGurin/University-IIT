@@ -19,6 +19,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -28,19 +29,29 @@ public class WebSecurityConfig{
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
     private final LogoutHandler logoutHandler;
+    private static final String[] WHITE_LIST_URL = {
+            "/api/v1/auth/**",
+            "/api/v1/posts",
+            //"/api/v1/posts/{id}",
+            "/api/v1/schedule/**",
+            "/swagger-ui/**",
+            "/v3/api-docs/swagger-config",
+            "/v3/api-docs",
+            "/api/v1/users/**"
+    };
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
         http
                 .csrf((csrf -> csrf.ignoringRequestMatchers("/**")))
-                //.cors(cors -> cors.disable())
+                .cors(cors -> cors.disable())
 
                 //.cors(Customizer.withDefaults())
                 /*.cors(httpSecurityCorsConfigurer ->
                         httpSecurityCorsConfigurer.configurationSource(request ->
                                 new CorsConfiguration().applyPermitDefaultValues()))*/
                 .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/api/v1/auth/**", "/api/v1/posts/**", "/api/v1/schedule/**", "/swagger-ui/**", "/v3/api-docs/swagger-config", "/v3/api-docs").permitAll()
+                        .requestMatchers(WHITE_LIST_URL).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -61,8 +72,10 @@ public class WebSecurityConfig{
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("https://localhost:5173/**"));
+        configuration.setAllowedMethods(List.of("*"));//
+        configuration.setAllowedOrigins(Arrays.asList("https://localhost:5173"));
         configuration.setAllowedMethods(Arrays.asList("GET","POST", "PUT", "DELETE", "OPTIONS", "TRACE", "PATH", "HEAD", "CONNECT"));
+        configuration.setAllowCredentials(true);//
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
