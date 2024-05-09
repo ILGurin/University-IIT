@@ -1,8 +1,14 @@
 package com.bstu.UniversityIIT.controller;
 
-import com.bstu.UniversityIIT.entity.User;
+import com.bstu.UniversityIIT.entity.DTO.FileDTO;
 import com.bstu.UniversityIIT.entity.DTO.UserDTO;
+import com.bstu.UniversityIIT.entity.User;
+import com.bstu.UniversityIIT.service.FileService;
 import com.bstu.UniversityIIT.service.UserService;
+import com.bstu.UniversityIIT.service.mapper.FileDTOMapper;
+import com.bstu.UniversityIIT.entity.enums.Discipline;
+import com.bstu.UniversityIIT.repository.FileMetadataRepository;
+import com.bstu.UniversityIIT.entity.enums.FileType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -12,6 +18,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +40,9 @@ import java.util.List;
 @RequestMapping("/api/v1")
 public class PublicController {
     public final UserService userService;
+    private final FileService fileService;
+    private final FileMetadataRepository fileMetadataRepository;
+    private final FileDTOMapper fileDTOMapper;
 
     //TODO resolve xlsx issue
     @GetMapping(path = "/schedule/{typeSchedule}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -149,5 +159,51 @@ public class PublicController {
     @GetMapping("/users/getAllTeachers")
     public List<UserDTO> getAllTeachers(){
         return userService.getAllTeachers();
+    }
+
+    @PreAuthorize("hasRole('TEACHER')")
+    @PostMapping("/fileSystem/upload")
+    public ResponseEntity<?> saveFile(
+            @RequestParam MultipartFile file,
+            @RequestParam FileType fileType,
+            @RequestParam Discipline discipline,
+            @AuthenticationPrincipal UserDetails user
+    ){
+        return new ResponseEntity<>(fileService.upload(file, fileType, discipline, user), HttpStatus.CREATED);
+    }
+
+    @GetMapping("/fileSystem/{id}")
+    public ResponseEntity<?> getFile(@PathVariable Integer id){
+        return new ResponseEntity<>(fileService.getFileById(id), HttpStatus.OK);
+    }
+
+    @GetMapping("/fileSystem/getAllMaterials")
+    public ResponseEntity<?> getAllMaterials(
+            @RequestParam(required = false) String teacher
+    ){
+        List<FileDTO> response = (teacher != null)
+                ? fileService.getAllMaterialsByUser(userService.findByUsername(teacher))
+                : fileService.getAllMaterials();
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/fileSystem/getExamQuestions")
+    public ResponseEntity<?> getAllExamQuestions(
+            @RequestParam(required = false) String teacher
+    ){
+        List<FileDTO> response = (teacher != null)
+                ? fileService.getALlExamQuestionsByUser(userService.findByUsername(teacher))
+                : fileService.getAllExamQuestions();
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/fileSystem/getLabWorks")
+    public ResponseEntity<?> getAllLabWorks(
+            @RequestParam(required = false) String teacher
+    ){
+        List<FileDTO> response = (teacher != null)
+                ? fileService.getAllLabWorksByUser(userService.findByUsername(teacher))
+                : fileService.getAllLabWorks();
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

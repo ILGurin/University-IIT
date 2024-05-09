@@ -1,4 +1,4 @@
-package com.bstu.UniversityIIT.entity;
+package com.bstu.UniversityIIT.entity.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

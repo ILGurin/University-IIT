@@ -1,5 +1,6 @@
 package com.bstu.UniversityIIT.entity;
 
+import com.bstu.UniversityIIT.entity.enums.TokenType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

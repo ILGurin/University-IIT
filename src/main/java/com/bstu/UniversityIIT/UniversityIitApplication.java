@@ -7,7 +7,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import static com.bstu.UniversityIIT.entity.Role.*;
+import static com.bstu.UniversityIIT.entity.enums.Role.*;
 
 @SpringBootApplication
 public class UniversityIitApplication {
@@ -34,6 +34,13 @@ public class UniversityIitApplication {
 					.role(TEACHER)
 					.build();
 			System.out.println("Teacher token: " + service.register(teacher).getAccessToken());
+
+			var teacher2 = RegisterRequest.builder()
+					.username("teacher2")
+					.password("teacher2")
+					.role(TEACHER)
+					.build();
+			System.out.println("Teacher token2: " + service.register(teacher2).getAccessToken());
 
 			var admin = RegisterRequest.builder()
 					.username("admin")

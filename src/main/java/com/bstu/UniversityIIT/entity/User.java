@@ -1,5 +1,6 @@
 package com.bstu.UniversityIIT.entity;
 
+import com.bstu.UniversityIIT.entity.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -32,6 +33,9 @@ public class User implements UserDetails {
 
     @OneToOne(mappedBy = "user")
     private ProfilePhoto profilePhoto;
+
+    @OneToMany(mappedBy = "user")
+    private List<FileMetadataEntity> fileMetadataEntity;
 
 
     /*@Override

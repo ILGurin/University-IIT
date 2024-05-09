@@ -1,6 +1,6 @@
 package com.bstu.UniversityIIT.auth;
 
-import com.bstu.UniversityIIT.entity.Role;
+import com.bstu.UniversityIIT.entity.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

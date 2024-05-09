@@ -1,4 +1,4 @@
-package com.bstu.UniversityIIT.entity;
+package com.bstu.UniversityIIT.entity.enums;
 
 public enum TokenType {
     BEARER,

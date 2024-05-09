@@ -3,6 +3,7 @@ package com.bstu.UniversityIIT.auth;
 import com.bstu.UniversityIIT.config.JwtService;
 import com.bstu.UniversityIIT.entity.*;
 import com.bstu.UniversityIIT.entity.DTO.UserDTO;
+import com.bstu.UniversityIIT.entity.enums.TokenType;
 import com.bstu.UniversityIIT.repository.TokenRepository;
 import com.bstu.UniversityIIT.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
